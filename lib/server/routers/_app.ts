@@ -4,12 +4,14 @@
  */
 
 import { router } from "../trpc";
+import { authRouter } from "./auth";
 import { productsRouter } from "./products";
 import { recommendationsRouter } from "./recommendations";
 import { simulationsRouter } from "./simulations";
 import { analyticsRouter } from "./analytics";
 
 export const appRouter = router({
+  auth: authRouter,
   products: productsRouter,
   recommendations: recommendationsRouter,
   simulations: simulationsRouter,
