@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Moneta AI
+
+**Intelligent Pricing Analyst for Data-Driven Decisions**
+
+Moneta AI is an intelligent pricing analyst designed to help businesses make confident, data-driven pricing decisions. The system ingests internal pricing, cost, and sales data alongside external market and competitor signals, then analyzes historical patterns to understand how price changes impact demand, revenue, and margins.
+
+## Features
+
+- **Data Ingestion**: Import pricing, cost, sales, and competitor data from multiple sources
+- **Historical Analysis**: Understand how past price changes impacted business metrics
+- **What-If Simulations**: Test pricing scenarios before implementation
+- **AI-Powered Recommendations**: Get explainable price recommendations with confidence scores
+- **Risk Assessment**: Understand potential risks of pricing changes
+- **Transparent Decisions**: Every recommendation backed by data and reasoning
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **UI**: React 19, TailwindCSS 4, shadcn/ui, Radix UI
+- **AI/Agents**: LangChain, LangGraph, OpenAI
+- **API**: tRPC for type-safe APIs
+- **Database**: Prisma ORM
+- **Data Visualization**: Recharts
+- **State Management**: TanStack Query
+- **Forms**: React Hook Form + Zod validation
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- npm/yarn/pnpm
+
+### Installation
 
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+
+# Initialize database
+npx prisma generate
+npx prisma db push
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+moneta-ai/
+├── app/              # Next.js App Router pages
+├── components/       # React components
+│   └── ui/          # shadcn UI components
+├── lib/             # Utilities and helpers
+├── server/          # tRPC routers and server logic
+├── prisma/          # Database schema
+└── public/          # Static assets
+```
 
-## Learn More
+## Development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Run dev server
+npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Build for production
+npm run build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Start production server
+npm start
 
-## Deploy on Vercel
+# Lint code
+npm run lint
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create a `.env` file with the following variables:
+
+```env
+# Database
+DATABASE_URL="your-database-url"
+
+# OpenAI
+OPENAI_API_KEY="your-openai-api-key"
+
+# Optional: LangSmith (for debugging)
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY="your-langsmith-api-key"
+```
+
+## License
+
+Private - All Rights Reserved
