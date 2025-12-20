@@ -1,7 +1,8 @@
 // Moneta AI - Intelligent Pricing Analyst Database Schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
