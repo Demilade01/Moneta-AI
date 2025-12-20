@@ -71,14 +71,16 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
+              asChild
               className="rounded-full border border-white/20 px-6 text-sm font-medium text-white transition-all hover:bg-white/5"
             >
-              Login
+              <a href="/auth/login">Login</a>
             </Button>
             <Button
+              asChild
               className="rounded-full bg-white px-6 text-sm font-medium text-black transition-all hover:bg-white/90"
             >
-              Sign Up
+              <a href="/auth/signup">Sign Up</a>
             </Button>
           </div>
         </div>
