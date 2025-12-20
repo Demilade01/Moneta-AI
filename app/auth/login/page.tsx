@@ -6,24 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useLogin } from "@/lib/client/auth";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+
+  const login = useLogin();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Accept any credentials and go to dashboard
-    router.push("/dashboard");
+    login.mutate({
+      email,
+      password,
+    });
   };
 
   return (
@@ -147,10 +145,10 @@ export default function LoginPage() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={isLoading}
+                  disabled={login.isPending}
                 className="group h-12 w-full rounded-xl bg-white text-base font-medium text-black transition-all hover:bg-white/90"
               >
-                {isLoading ? (
+                {login.isPending ? (
                   "Signing in..."
                 ) : (
                   <>
@@ -229,18 +227,6 @@ export default function LoginPage() {
             </motion.div>
           </div>
 
-          {/* Demo Notice */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-center backdrop-blur-xl"
-          >
-            <p className="text-sm text-gray-400">
-              <span className="font-medium text-white">Demo Mode:</span> Enter any
-              email and password to continue
-            </p>
-          </motion.div>
         </motion.div>
       </div>
     </div>

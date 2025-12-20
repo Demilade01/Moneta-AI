@@ -5,14 +5,19 @@
 
 import { type FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { prisma } from "@/lib/prisma";
+import { getTokenFromCookies, getUserFromToken } from "./auth";
 
 export async function createContext(opts?: FetchCreateContextFnOptions) {
-  // In a real app, you'd extract the user from session/JWT
-  // For now, we'll set user as null (will implement auth later)
+  // Extract JWT token from cookies
+  const cookieHeader = opts?.req.headers.get("cookie") || null;
+  const token = getTokenFromCookies(cookieHeader);
+
+  // Get user from token if it exists
+  const user = token ? getUserFromToken(token) : null;
 
   return {
     prisma,
-    user: null as { id: string; email: string; role: string } | null,
+    user,
   };
 }
 

@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import { useLogout, useAuth } from "@/lib/client/auth";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -22,9 +23,11 @@ interface HeaderProps {
 export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const [notifications] = useState(3);
+  const { user } = useAuth();
+  const logout = useLogout();
 
   const handleLogout = () => {
-    router.push("/");
+    logout.mutate();
   };
 
   return (
@@ -84,8 +87,8 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <User className="h-3 w-3 text-white md:h-4 md:w-4" />
               </div>
               <div className="hidden text-left md:block">
-                <div className="text-sm font-medium text-white">Demo User</div>
-                <div className="text-xs text-gray-400">demo@monetaai.com</div>
+                <div className="text-sm font-medium text-white">{user?.name || "User"}</div>
+                <div className="text-xs text-gray-400">{user?.email || "Loading..."}</div>
               </div>
             </Button>
           </DropdownMenuTrigger>
