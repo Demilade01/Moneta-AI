@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Bell, User, LogOut, Settings } from "lucide-react";
+import { Search, Bell, User, LogOut, Settings, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const [notifications] = useState(3);
 
@@ -28,31 +32,42 @@ export function Header() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="flex h-20 items-center justify-between border-b border-white/10 bg-[#010203]/80 px-6 backdrop-blur-xl"
+      className="flex h-16 items-center justify-between border-b border-white/10 bg-[#010203]/80 px-4 backdrop-blur-xl md:h-20 md:px-6"
     >
-      {/* Search Bar */}
-      <div className="flex flex-1 items-center gap-4">
+      {/* Left Section - Hamburger + Search */}
+      <div className="flex flex-1 items-center gap-2 md:gap-4">
+        {/* Hamburger Menu - Mobile */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onMenuClick}
+          className="rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 lg:hidden"
+        >
+          <Menu className="h-5 w-5 text-white" />
+        </Button>
+
+        {/* Search Bar */}
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
           <Input
             type="search"
-            placeholder="Search products, insights, or reports..."
-            className="h-10 rounded-xl border-white/10 bg-white/5 pl-10 text-sm text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10"
+            placeholder="Search..."
+            className="h-9 rounded-xl border-white/10 bg-white/5 pl-10 text-sm text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 md:h-10"
           />
         </div>
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 md:gap-3">
         {/* Notifications */}
         <Button
           variant="ghost"
           size="icon"
-          className="relative rounded-xl border border-white/10 bg-white/5 hover:bg-white/10"
+          className="relative h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 md:h-10 md:w-10"
         >
-          <Bell className="h-5 w-5 text-gray-400" />
+          <Bell className="h-4 w-4 text-gray-400 md:h-5 md:w-5" />
           {notifications > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white md:h-5 md:w-5 md:text-xs">
               {notifications}
             </span>
           )}
@@ -63,10 +78,10 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 hover:bg-white/10"
+              className="flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 hover:bg-white/10 md:h-10 md:gap-3 md:px-3"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                <User className="h-4 w-4 text-white" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 md:h-8 md:w-8">
+                <User className="h-3 w-3 text-white md:h-4 md:w-4" />
               </div>
               <div className="hidden text-left md:block">
                 <div className="text-sm font-medium text-white">Demo User</div>

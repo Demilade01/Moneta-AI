@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -11,6 +11,7 @@ import {
   Lightbulb,
   Settings,
   BarChart3,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -52,24 +53,55 @@ const navigation = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className="flex w-64 flex-col border-r border-white/10 bg-[#010203]"
-    >
+    <>
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+            onClick={onClose}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <motion.aside
+        initial={{ x: -20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-[#010203] transition-transform duration-300 lg:relative lg:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
       {/* Logo */}
-      <div className="flex h-20 items-center px-6">
+      <div className="flex h-16 items-center justify-between px-4 md:h-20 md:px-6">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5">
             <span className="text-xl font-bold text-white">M</span>
           </div>
           <span className="text-xl font-semibold text-white">Moneta AI</span>
         </Link>
+        {/* Close button for mobile */}
+        <button
+          onClick={onClose}
+          className="rounded-lg p-2 text-gray-400 hover:bg-white/10 hover:text-white lg:hidden"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -85,6 +117,7 @@ export function Sidebar() {
             >
               <Link
                 href={item.href}
+                onClick={onClose}
                 className={cn(
                   "group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
                   isActive
@@ -126,7 +159,8 @@ export function Sidebar() {
           </button>
         </div>
       </div>
-    </motion.aside>
+      </motion.aside>
+    </>
   );
 }
 
