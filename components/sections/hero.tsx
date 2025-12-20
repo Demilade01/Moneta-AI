@@ -6,7 +6,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden pt-32 pb-24">
+    <section className="relative min-h-screen overflow-hidden pt-24 md:pt-32 pb-16 md:pb-24">
       {/* Enhanced background gradients */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[600px] w-[800px] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.1),transparent_70%)] opacity-40" />
 
@@ -20,14 +20,14 @@ export function Hero() {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative w-full max-w-5xl rounded-3xl border border-white/10 bg-white/5 p-12 md:p-16 backdrop-blur-xl shadow-2xl shadow-white/5"
+            className="relative w-full max-w-5xl rounded-2xl md:rounded-3xl border border-white/10 bg-white/5 p-6 md:p-12 lg:p-16 backdrop-blur-xl shadow-2xl shadow-white/5"
           >
             {/* Badge */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300"
+              className="mb-6 md:mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm text-gray-300"
             >
               <Sparkles className="h-4 w-4" />
               <span>AI-Powered Pricing Intelligence</span>
@@ -38,7 +38,7 @@ export function Hero() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="mb-6 text-5xl font-bold tracking-tight text-white md:text-6xl lg:text-7xl"
+              className="mb-4 md:mb-6 text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-white"
             >
               Your Intelligent
               <br />
@@ -50,7 +50,7 @@ export function Hero() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="mb-10 mx-auto max-w-2xl text-lg text-gray-400 md:text-xl"
+              className="mb-8 md:mb-10 mx-auto max-w-2xl text-base md:text-lg lg:text-xl text-gray-400"
             >
               Make confident, data-driven pricing decisions with AI-powered analysis,
               simulations, and explainable recommendations. No black boxes.
@@ -86,19 +86,19 @@ export function Hero() {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.7 }}
-            className="mt-16 grid grid-cols-3 gap-8 md:gap-16"
+            className="mt-12 md:mt-16 grid grid-cols-3 gap-4 md:gap-8 lg:gap-16"
           >
             <div className="text-center">
-              <div className="text-3xl font-bold text-white">98%</div>
-              <div className="text-sm text-gray-400">Accuracy</div>
+              <div className="text-2xl md:text-3xl font-bold text-white">98%</div>
+              <div className="text-xs md:text-sm text-gray-400">Accuracy</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-white">2.3x</div>
-              <div className="text-sm text-gray-400">ROI Increase</div>
+              <div className="text-2xl md:text-3xl font-bold text-white">2.3x</div>
+              <div className="text-xs md:text-sm text-gray-400">ROI Increase</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-white">24/7</div>
-              <div className="text-sm text-gray-400">Analysis</div>
+              <div className="text-2xl md:text-3xl font-bold text-white">24/7</div>
+              <div className="text-xs md:text-sm text-gray-400">Analysis</div>
             </div>
           </motion.div>
         </div>
