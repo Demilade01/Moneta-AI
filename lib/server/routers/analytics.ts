@@ -7,6 +7,51 @@ import { z } from "zod";
 import { router, protectedProcedure } from "../trpc";
 
 export const analyticsRouter = router({
+  // Get dashboard stats (alias for getOverview with additional fields)
+  getDashboardStats: protectedProcedure.query(async ({ ctx }) => {
+    const [
+      productCount,
+      products,
+      recentSales,
+    ] = await Promise.all([
+      ctx.prisma.product.count({
+        where: { userId: ctx.user.id },
+      }),
+      ctx.prisma.product.findMany({
+        where: { userId: ctx.user.id },
+        select: {
+          currentPrice: true,
+        },
+      }),
+      ctx.prisma.salesData.aggregate({
+        where: {
+          product: {
+            userId: ctx.user.id,
+          },
+          periodStart: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+          },
+        },
+        _sum: {
+          revenue: true,
+          unitsSold: true,
+        },
+      }),
+    ]);
+
+    // Calculate average price
+    const avgPrice = products.length > 0
+      ? products.reduce((sum, p) => sum + Number(p.currentPrice), 0) / products.length
+      : 0;
+
+    return {
+      totalProducts: productCount,
+      totalRevenue: Number(recentSales._sum.revenue || 0),
+      totalUnits: recentSales._sum.unitsSold || 0,
+      avgPrice,
+    };
+  }),
+
   // Get dashboard overview stats
   getOverview: protectedProcedure.query(async ({ ctx }) => {
     const [
