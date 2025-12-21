@@ -10,6 +10,10 @@ import {
   Search,
   ArrowUpRight,
   ArrowDownRight,
+  Package,
+  DollarSign,
+  ShoppingCart,
+  Activity,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,78 +24,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Mock data for products
-const products = [
-  {
-    id: "1",
-    name: "Premium Plan",
-    sku: "PREM-001",
-    currentPrice: 149.99,
-    previousPrice: 139.99,
-    change: 7.1,
-    revenue: 847392,
-    units: 5647,
-    elasticity: -0.82,
-    competitors: [
-      { name: "Competitor A", price: 159.99 },
-      { name: "Competitor B", price: 145.00 },
-    ],
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Standard Plan",
-    sku: "STD-002",
-    currentPrice: 79.99,
-    previousPrice: 84.99,
-    change: -5.9,
-    revenue: 423891,
-    units: 5299,
-    elasticity: -1.15,
-    competitors: [
-      { name: "Competitor A", price: 89.99 },
-      { name: "Competitor B", price: 74.99 },
-    ],
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Basic Plan",
-    sku: "BSC-003",
-    currentPrice: 29.99,
-    previousPrice: 29.99,
-    change: 0,
-    revenue: 178456,
-    units: 5951,
-    elasticity: -1.42,
-    competitors: [
-      { name: "Competitor A", price: 34.99 },
-      { name: "Competitor B", price: 27.99 },
-    ],
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Enterprise Plan",
-    sku: "ENT-004",
-    currentPrice: 499.99,
-    previousPrice: 479.99,
-    change: 4.2,
-    revenue: 1247891,
-    units: 2496,
-    elasticity: -0.64,
-    competitors: [
-      { name: "Competitor A", price: 549.99 },
-      { name: "Competitor B", price: 489.99 },
-    ],
-    status: "active",
-  },
-];
+import { trpc } from "@/lib/client/trpc";
+import { format } from "date-fns";
 
 export default function PricingAnalysisPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  // Fetch products
+  const { data: productsData, isLoading } = trpc.products.list.useQuery({
+    limit: 100,
+    offset: 0,
+  });
+
+  // Fetch analytics
+  const { data: analyticsData } = trpc.analytics.getDashboardStats.useQuery();
+
+  // Filter products
+  const filteredProducts = productsData?.products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      categoryFilter === "all" || product.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Get unique categories
+  const categories = Array.from(
+    new Set(productsData?.products.map((p) => p.category).filter(Boolean))
+  );
+
+  // Calculate summary stats
+  const totalProducts = productsData?.total || 0;
+  const avgPrice = productsData?.products
+    ? productsData.products.reduce(
+        (sum, p) => sum + Number(p.currentPrice),
+        0
+      ) / (productsData.products.length || 1)
+    : 0;
+  const totalRevenue = analyticsData?.totalRevenue || 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-white"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -100,46 +80,39 @@ export default function PricingAnalysisPage() {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="flex items-center justify-between"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-white">Pricing Analysis</h1>
-          <p className="text-gray-400">
-            Monitor and optimize your product pricing strategy
-          </p>
-        </div>
-        <Button className="gap-2 rounded-xl bg-white text-black hover:bg-white/90">
-          <Download className="h-4 w-4" />
-          Export Report
-        </Button>
+        <h1 className="text-3xl font-bold text-white">Pricing Analysis</h1>
+        <p className="text-gray-400">
+          Monitor and optimize your product pricing strategy
+        </p>
       </motion.div>
 
       {/* Summary Cards */}
       <div className="grid gap-6 md:grid-cols-4">
         {[
           {
-            label: "Avg. Price",
-            value: "$189.99",
-            change: "+5.2%",
-            positive: true,
+            label: "Total Products",
+            value: totalProducts.toLocaleString(),
+            icon: Package,
+            change: null,
+          },
+          {
+            label: "Avg Price",
+            value: `$${avgPrice.toFixed(2)}`,
+            icon: DollarSign,
+            change: null,
           },
           {
             label: "Total Revenue",
-            value: "$2.7M",
-            change: "+12.5%",
-            positive: true,
-          },
-          {
-            label: "Avg. Elasticity",
-            value: "-1.01",
-            change: "Optimal",
-            positive: true,
+            value: `$${(totalRevenue / 1000).toFixed(1)}K`,
+            icon: ShoppingCart,
+            change: null,
           },
           {
             label: "Active Products",
-            value: "284",
-            change: "+8",
-            positive: true,
+            value: totalProducts.toLocaleString(),
+            icon: Activity,
+            change: null,
           },
         ].map((stat, index) => (
           <motion.div
@@ -150,57 +123,63 @@ export default function PricingAnalysisPage() {
             className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
           >
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-400">{stat.label}</div>
-              <div
-                className={`flex items-center gap-1 text-xs font-medium ${
-                  stat.positive ? "text-emerald-400" : "text-red-400"
-                }`}
-              >
-                {stat.positive ? (
-                  <ArrowUpRight className="h-3 w-3" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3" />
-                )}
-                {stat.change}
+              <div>
+                <div className="text-sm text-gray-400">{stat.label}</div>
+                <div className="mt-1 text-2xl font-bold text-white">
+                  {stat.value}
+                </div>
               </div>
-            </div>
-            <div className="mt-2 text-2xl font-bold text-white">
-              {stat.value}
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+                <stat.icon className="h-6 w-6 text-white" />
+              </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Filters and Search */}
+      {/* Filters */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.4 }}
-        className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl md:flex-row md:items-center md:justify-between"
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div className="flex flex-1 items-center gap-4">
+        <div className="flex flex-1 items-center gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
-              type="search"
-              placeholder="Search products..."
+              placeholder="Search products or SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 rounded-xl border-white/10 bg-white/5 pl-10 text-white placeholder:text-gray-500"
+              className="pl-10 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-400"
             />
           </div>
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[180px] rounded-xl border-white/10 bg-white/5 text-white">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter by" />
+              <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-white/10 bg-[#010203]/95 backdrop-blur-xl">
-              <SelectItem value="all">All Products</SelectItem>
-              <SelectItem value="premium">Premium</SelectItem>
-              <SelectItem value="standard">Standard</SelectItem>
-              <SelectItem value="basic">Basic</SelectItem>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat || ""}>
+                  {cat}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            className="gap-2 rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10"
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+          </Button>
+          <Button className="gap-2 rounded-xl bg-white text-black hover:bg-white/90">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
         </div>
       </motion.div>
 
@@ -211,127 +190,145 @@ export default function PricingAnalysisPage() {
         transition={{ duration: 0.6, delay: 0.5 }}
         className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-white/10">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
-                  Product
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
-                  Current Price
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
-                  Change
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
-                  Revenue
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
-                  Units Sold
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
-                  Elasticity
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
-                  Competitors
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product, index) => (
-                <motion.tr
-                  key={product.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
-                  className="border-b border-white/5 transition-colors hover:bg-white/5"
-                >
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="font-medium text-white">
-                        {product.name}
-                      </div>
-                      <div className="text-sm text-gray-500">{product.sku}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-white">
-                      ${product.currentPrice.toFixed(2)}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      was ${product.previousPrice.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div
-                      className={`flex items-center gap-1 font-medium ${
-                        product.change > 0
-                          ? "text-emerald-400"
-                          : product.change < 0
-                          ? "text-red-400"
-                          : "text-gray-400"
-                      }`}
+        {filteredProducts && filteredProducts.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-white/10">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Product
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    SKU
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Category
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Current Price
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Cost Price
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Margin
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Created
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProducts.map((product) => {
+                  const margin =
+                    ((Number(product.currentPrice) - Number(product.costPrice)) /
+                      Number(product.currentPrice)) *
+                    100;
+                  return (
+                    <tr
+                      key={product.id}
+                      className="border-b border-white/5 transition-colors hover:bg-white/5"
                     >
-                      {product.change > 0 ? (
-                        <TrendingUp className="h-4 w-4" />
-                      ) : product.change < 0 ? (
-                        <TrendingDown className="h-4 w-4" />
-                      ) : null}
-                      {product.change > 0 ? "+" : ""}
-                      {product.change.toFixed(1)}%
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 font-medium text-white">
-                    ${product.revenue.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 text-gray-300">
-                    {product.units.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="rounded-lg bg-white/10 px-2 py-1 text-sm font-medium text-white">
-                      {product.elasticity.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-1">
-                      {product.competitors.map((comp) => (
-                        <div
-                          key={comp.name}
-                          className="flex items-center justify-between text-xs"
-                        >
-                          <span className="text-gray-400">{comp.name}</span>
-                          <span className="font-medium text-white">
-                            ${comp.price.toFixed(2)}
-                          </span>
+                      <td className="px-6 py-4">
+                        <div>
+                          <div className="font-medium text-white">
+                            {product.name}
+                          </div>
+                          {product.description && (
+                            <div className="text-xs text-gray-400 mt-1 max-w-xs truncate">
+                              {product.description}
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="rounded-lg bg-white/5 px-2 py-1 text-xs font-mono text-gray-300">
+                          {product.sku}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-300">
+                        {product.category || "-"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="font-semibold text-white">
+                          ${Number(product.currentPrice).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-300">
+                        ${Number(product.costPrice).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium ${
+                            margin > 40
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : margin > 20
+                              ? "bg-yellow-500/20 text-yellow-400"
+                              : "bg-red-500/20 text-red-400"
+                          }`}
+                        >
+                          {margin > 40 ? (
+                            <TrendingUp className="h-3 w-3" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3" />
+                          )}
+                          {margin.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-400">
+                        {format(new Date(product.createdAt), "MMM d, yyyy")}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="py-12 text-center">
+            <Package className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-4 text-lg font-semibold text-white">
+              No products found
+            </h3>
+            <p className="mt-2 text-sm text-gray-400">
+              {searchQuery || categoryFilter !== "all"
+                ? "Try adjusting your filters"
+                : "Upload product data to get started"}
+            </p>
+            <Button
+              onClick={() => (window.location.href = "/dashboard/data")}
+              className="mt-4 rounded-xl bg-white text-black hover:bg-white/90"
+            >
+              Upload Data
+            </Button>
+          </div>
+        )}
       </motion.div>
 
-      {/* Price Performance Chart */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-        className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
-      >
-        <h3 className="mb-4 text-lg font-semibold text-white">
-          Price Performance Trends
-        </h3>
-        <div className="flex h-64 items-center justify-center rounded-xl border border-white/10 bg-white/5">
-          <p className="text-sm text-gray-500">
-            Chart visualization coming soon...
-          </p>
+      {/* Pagination */}
+      {filteredProducts && filteredProducts.length > 0 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-400">
+            Showing {filteredProducts.length} of {totalProducts} products
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg border-white/10 bg-white/5 text-white"
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg border-white/10 bg-white/5 text-white"
+            >
+              Next
+            </Button>
+          </div>
         </div>
-      </motion.div>
+      )}
     </div>
   );
 }
-
