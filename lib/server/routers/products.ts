@@ -8,6 +8,53 @@ import { router, protectedProcedure, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 
 export const productsRouter = router({
+  // List products (alias for getAll)
+  list: protectedProcedure
+    .input(
+      z.object({
+        category: z.string().optional(),
+        search: z.string().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where = {
+        userId: ctx.user.id,
+        ...(input.category && { category: input.category }),
+        ...(input.search && {
+          OR: [
+            { name: { contains: input.search, mode: "insensitive" as const } },
+            { sku: { contains: input.search, mode: "insensitive" as const } },
+          ],
+        }),
+      };
+
+      const [products, total] = await Promise.all([
+        ctx.prisma.product.findMany({
+          where,
+          take: input.limit,
+          skip: input.offset,
+          orderBy: { createdAt: "desc" },
+          include: {
+            _count: {
+              select: {
+                salesData: true,
+                priceHistory: true,
+              },
+            },
+          },
+        }),
+        ctx.prisma.product.count({ where }),
+      ]);
+
+      return {
+        products,
+        total,
+        hasMore: input.offset + input.limit < total,
+      };
+    }),
+
   // Get all products for current user
   getAll: protectedProcedure
     .input(
