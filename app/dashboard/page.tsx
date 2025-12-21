@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/client/trpc";
 import { format } from "date-fns";
+import { RevenueTrendChart } from "@/components/charts/revenue-trend-chart";
 
 export default function DashboardPage() {
   // Fetch analytics data
@@ -29,6 +30,11 @@ export default function DashboardPage() {
   const { data: uploadsData } = trpc.upload.getHistory.useQuery({
     limit: 5,
     offset: 0,
+  });
+
+  // Fetch revenue analytics
+  const { data: revenueData } = trpc.analytics.getRevenueAnalytics.useQuery({
+    period: "30d",
   });
 
   const stats = [
@@ -104,6 +110,28 @@ export default function DashboardPage() {
           </motion.div>
         ))}
       </div>
+
+      {/* Revenue Trend Chart */}
+      {revenueData && revenueData.timeSeriesData.length > 0 && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+        >
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-white">Revenue Trend</h2>
+              <p className="text-sm text-gray-400">
+                {revenueData.trend.trend === "increasing" ? "📈" : revenueData.trend.trend === "decreasing" ? "📉" : "➡️"}{" "}
+                {revenueData.trend.trend.charAt(0).toUpperCase() + revenueData.trend.trend.slice(1)} trend •{" "}
+                {revenueData.growthRate > 0 ? "+" : ""}{revenueData.growthRate.toFixed(1)}% growth
+              </p>
+            </div>
+          </div>
+          <RevenueTrendChart data={revenueData.timeSeriesData} height={250} />
+        </motion.div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">

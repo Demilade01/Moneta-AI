@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { trpc } from "@/lib/client/trpc";
 import { format } from "date-fns";
+import { CompetitorComparisonChart } from "@/components/charts/competitor-comparison-chart";
 
 export default function PricingAnalysisPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +40,9 @@ export default function PricingAnalysisPage() {
 
   // Fetch analytics
   const { data: analyticsData } = trpc.analytics.getDashboardStats.useQuery();
+
+  // Fetch competitor comparison
+  const { data: competitorData } = trpc.analytics.getCompetitorComparison.useQuery();
 
   // Filter products
   const filteredProducts = productsData?.products.filter((product) => {
@@ -304,6 +308,26 @@ export default function PricingAnalysisPage() {
           </div>
         )}
       </motion.div>
+
+      {/* Competitor Comparison */}
+      {competitorData && competitorData.length > 0 && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+        >
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-white">
+              Competitor Price Comparison
+            </h2>
+            <p className="text-sm text-gray-400">
+              Your pricing vs market average
+            </p>
+          </div>
+          <CompetitorComparisonChart data={competitorData.slice(0, 10)} height={300} />
+        </motion.div>
+      )}
 
       {/* Pagination */}
       {filteredProducts && filteredProducts.length > 0 && (
