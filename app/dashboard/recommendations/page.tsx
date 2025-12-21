@@ -259,7 +259,7 @@ export default function RecommendationsPage() {
                         key={idx}
                         className="flex items-start gap-3 text-sm text-gray-300"
                       >
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
                         {reason}
                       </li>
                     ))}

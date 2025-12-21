@@ -57,11 +57,12 @@ export default function PricingAnalysisPage() {
 
   // Calculate summary stats
   const totalProducts = productsData?.total || 0;
-  const avgPrice =
-    productsData?.products.reduce(
-      (sum, p) => sum + Number(p.currentPrice),
-      0
-    ) / (productsData?.products.length || 1);
+  const avgPrice = productsData?.products
+    ? productsData.products.reduce(
+        (sum, p) => sum + Number(p.currentPrice),
+        0
+      ) / (productsData.products.length || 1)
+    : 0;
   const totalRevenue = analyticsData?.totalRevenue || 0;
 
   if (isLoading) {
