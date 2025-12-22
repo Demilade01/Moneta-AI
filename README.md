@@ -14,11 +14,13 @@ Moneta AI is an intelligent pricing analyst designed to help businesses make con
 
 ## ✨ Key Features
 
-- 🧠 **AI-Powered Analysis** - Advanced ML models analyze market dynamics and customer behavior
-- 📊 **Revenue Simulation** - Test pricing strategies with accurate forecasting
-- 🔍 **Explainable Decisions** - Full transparency with confidence scores
-- ⚡ **Instant Insights** - Get recommendations in seconds, not weeks
-- 📈 **Enterprise Intelligence** - Real-time dashboards for actionable insights
+- 🤖 **Multi-Agent AI System** - 4 specialized AI agents (Data Analyst, Market Analyst, Pricing Strategist, Recommendation Agent) work together using LangGraph
+- 🧠 **GPT-4 Powered** - Advanced reasoning with OpenAI GPT-4o for intelligent pricing decisions
+- 📊 **Pricing Analytics Engine** - Price elasticity, competitor analysis, revenue trends, and margin optimization
+- 💡 **Smart Recommendations** - AI-generated pricing suggestions with confidence scores, impact projections, and clear reasoning
+- 📈 **Interactive Dashboards** - Real-time visualizations with Recharts for revenue trends, category performance, and competitor comparison
+- 📤 **Data Upload System** - Drag-and-drop CSV/Excel files with automatic column mapping and validation
+- 🔍 **Explainable AI** - Full transparency with detailed reasoning for every recommendation
 - 🛡️ **Full Auditability** - Every decision logged and traceable
 
 ## 🛠️ Tech Stack
@@ -51,9 +53,14 @@ npm install
 # Set up environment variables
 cp .env.example .env
 
+# Add required environment variables to .env:
+# DATABASE_URL=your-postgres-connection-string
+# JWT_SECRET=your-jwt-secret-key
+# OPENAI_API_KEY=your-openai-api-key
+
 # Initialize database
-npx prisma generate
-npx prisma db push
+npm run db:generate
+npm run db:push
 
 # Run development server
 npm run dev
@@ -61,19 +68,24 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to see the application.
 
-## 🧪 Demo Credentials
+### Environment Variables
 
-The authentication is currently in **demo mode** for UI development:
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DATABASE_URL` | PostgreSQL connection string | ✅ Yes |
+| `JWT_SECRET` | Secret key for JWT tokens | ✅ Yes |
+| `OPENAI_API_KEY` | OpenAI API key for AI agents | ✅ Yes |
 
-- **Any email** and **any password** will work
-- Sign in redirects to `/dashboard` (coming soon)
-- Perfect for testing the UI/UX flow
+**Get OpenAI API Key**: https://platform.openai.com/api-keys
 
-Example:
-```
-Email: demo@monetaai.com
-Password: demo123
-```
+### AI Setup
+
+See [AI_SETUP.md](./AI_SETUP.md) for detailed information about:
+- Multi-agent architecture
+- How the AI workflow works
+- Customization options
+- Cost estimation
+- Troubleshooting
 
 ## 📁 Project Structure
 
@@ -130,52 +142,60 @@ npm start
 npm run lint
 ```
 
-## Environment Variables
-
-Create a `.env` file with the following variables:
-
-```env
-# Database
-DATABASE_URL="your-database-url"
-
-# OpenAI
-OPENAI_API_KEY="your-openai-api-key"
-
-# Optional: LangSmith (for debugging)
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY="your-langsmith-api-key"
-```
 
 ## 🗺️ Roadmap
 
-### ✅ Phase 1: Landing Page (Complete)
-- [x] Premium glassmorphism design
-- [x] Animated backgrounds
-- [x] Hero section with stats
-- [x] Features showcase
-- [x] Analytics preview
-- [x] Trust & credibility section
-- [x] Authentication pages
+### ✅ Phase 1: UI & Design (Complete)
+- [x] Premium glassmorphism design system
+- [x] Landing page with 6 sections
+- [x] Responsive mobile navigation
+- [x] Authentication pages (login/signup)
+- [x] Dashboard layout with sidebar
+- [x] All priority 1 dashboard pages
 
-### 🚧 Phase 2: Dashboard (In Progress)
-- [ ] Dashboard layout with sidebar
-- [ ] Overview page with key metrics
-- [ ] Pricing analysis interface
-- [ ] Data upload system
-- [ ] Real-time charts with Recharts
+### ✅ Phase 2: Backend & Database (Complete)
+- [x] Prisma 7 schema with 11 models
+- [x] PostgreSQL database setup
+- [x] tRPC API layer with 6 routers
+- [x] JWT authentication with HTTP-only cookies
+- [x] Protected routes with middleware
 
-### 📅 Phase 3: Core Features (Planned)
-- [ ] Database schema with Prisma
-- [ ] tRPC API layer
-- [ ] AI agent system (LangChain + LangGraph)
-- [ ] Simulation engine
-- [ ] Recommendation system
+### ✅ Phase 3: Data Management (Complete)
+- [x] File upload system (CSV/Excel)
+- [x] Automatic column mapping
+- [x] Data validation with Zod
+- [x] Upload history tracking
+- [x] Database import functionality
 
-### 🔮 Phase 4: Enterprise Features (Future)
-- [ ] Full authentication system
+### ✅ Phase 4: Analytics Engine (Complete)
+- [x] Price elasticity calculation
+- [x] Competitor price analysis
+- [x] Revenue & margin analytics
+- [x] Time-series trend analysis
+- [x] Product performance metrics
+- [x] Interactive charts (Recharts)
+
+### ✅ Phase 5: AI Agent System (Complete)
+- [x] Multi-agent workflow with LangGraph
+- [x] 4 specialized AI agents (Data, Market, Pricing, Recommendation)
+- [x] OpenAI GPT-4o integration
+- [x] Structured output with function calling
+- [x] Confidence scoring & impact projections
+- [x] AI recommendations page with actions
+- [x] Recommendation tracking & implementation
+
+### 📋 Phase 6: Advanced Features (Next)
+- [ ] Batch recommendation generation
+- [ ] Streaming AI responses for real-time feedback
+- [ ] Custom business rules & constraints
+- [ ] A/B testing integration
+- [ ] Learning from past recommendation outcomes
+- [ ] Multi-product optimization
+- [ ] Seasonal adjustment factors
+- [ ] Team collaboration features
+- [ ] API access & webhooks
+- [ ] Advanced simulation scenarios
 - [ ] Multi-tenant support
-- [ ] Audit logs
-- [ ] Team collaboration
 - [ ] Integrations (Stripe, Salesforce, etc.)
 
 ## 📄 Metadata

@@ -136,6 +136,106 @@ export const recommendationsRouter = router({
       return updated;
     }),
 
+  // Generate AI recommendation for a product
+  generate: protectedProcedure
+    .input(z.object({ productId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Get product with related data
+      const product = await ctx.prisma.product.findUnique({
+        where: { id: input.productId },
+        include: {
+          salesData: {
+            orderBy: { periodStart: "desc" },
+            take: 90,
+          },
+          priceHistory: {
+            orderBy: { effectiveDate: "desc" },
+            take: 10,
+          },
+          competitorData: {
+            orderBy: { scrapedAt: "desc" },
+            take: 10,
+          },
+        },
+      });
+
+      if (!product || product.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Product not found",
+        });
+      }
+
+      // Check if there's enough data
+      if (product.salesData.length < 3) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Not enough sales data to generate recommendation. This product has ${product.salesData.length} data points, but at least 3 are required. Please upload more sales data.`,
+        });
+      }
+
+      // Prepare data for AI agent
+      const { generatePricingRecommendation } = await import("../ai/pricing-agent");
+
+      const result = await generatePricingRecommendation({
+        productId: product.id,
+        productName: product.name,
+        currentPrice: Number(product.currentPrice),
+        costPrice: Number(product.costPrice),
+        category: product.category || "Uncategorized",
+        salesHistory: product.salesData.map((s) => ({
+          date: s.periodStart.toISOString(),
+          quantity: s.unitsSold,
+          revenue: Number(s.revenue),
+        })),
+        priceHistory: product.priceHistory.map((p) => ({
+          date: p.effectiveDate.toISOString(),
+          price: Number(p.price),
+        })),
+        competitorPrices: product.competitorData.map((c) => ({
+          name: c.competitorName,
+          price: Number(c.competitorPrice),
+        })),
+      });
+
+      if (result.error || !result.recommendation) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: result.error || "Failed to generate recommendation",
+        });
+      }
+
+      // Save recommendation to database
+      const changePercent = ((result.recommendation.recommendedPrice - Number(product.currentPrice)) / Number(product.currentPrice)) * 100;
+
+      const recommendation = await ctx.prisma.recommendation.create({
+        data: {
+          userId: ctx.user.id,
+          productId: product.id,
+          currentPrice: product.currentPrice,
+          recommendedPrice: result.recommendation.recommendedPrice,
+          changePercent: changePercent,
+          reasoning: result.recommendation.reasoning,
+          confidenceScore: result.recommendation.confidenceScore,
+          projectedRevenueImpact: result.recommendation.expectedRevenueImpact,
+          projectedMarginImpact: result.recommendation.expectedMarginImpact,
+          riskLevel: result.recommendation.riskLevel.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
+          priority: result.recommendation.priority.toUpperCase() as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
+          status: "PENDING",
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        },
+      });
+
+      return {
+        recommendation,
+        insights: {
+          dataInsights: result.dataInsights,
+          marketInsights: result.marketInsights,
+          strategyInsights: result.strategyInsights,
+        },
+      };
+    }),
+
   // Get summary stats
   getSummary: protectedProcedure.query(async ({ ctx }) => {
     const [total, pending, implemented, projectedImpact] = await Promise.all([

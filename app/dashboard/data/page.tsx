@@ -200,18 +200,18 @@ export default function DataUploadPage() {
 
             {/* Data Type Selection */}
             <div className="mb-6">
-              <label className="mb-2 block text-sm font-medium text-white">
-                Data Type
+              <label className="mb-3 block text-center text-sm font-medium text-gray-400">
+                Select Data Type
               </label>
-              <div className="flex gap-2 justify-center">
+              <div className="flex gap-3 justify-center">
                 {(["products", "sales", "competitors"] as DataType[]).map((type) => (
                   <button
                     key={type}
                     onClick={() => setDataType(type)}
-                    className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                    className={`rounded-2xl border px-6 py-3 text-sm font-medium transition-all backdrop-blur-xl ${
                       dataType === type
-                        ? "border-white bg-white text-black"
-                        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+                        ? "border-white bg-white text-black shadow-lg"
+                        : "border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/20"
                     }`}
                   >
                     {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -283,19 +283,27 @@ export default function DataUploadPage() {
           </div>
 
           {/* Column Mapping */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             {parsedData.headers.map((header: string) => (
               <div key={header} className="flex items-center gap-4">
-                <div className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2">
-                  <span className="text-sm text-white">{header}</span>
+                <div className="flex-1 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-4">
+                  <span className="text-sm font-medium text-white">{header}</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-gray-400" />
+                <ArrowRight className="h-5 w-5 text-gray-500" />
                 <select
                   value={columnMapping[header] || ""}
                   onChange={(e) =>
                     setColumnMapping({ ...columnMapping, [header]: e.target.value })
                   }
-                  className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white"
+                  className="flex-1 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-5 py-4 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-white/20 focus:bg-white/10 focus:ring-2 focus:ring-white/10 hover:border-white/20 hover:bg-white/10 [&>option]:bg-[#010203] [&>option]:text-white"
+                  style={{
+                    colorScheme: 'dark',
+                    backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'12\' height=\'8\' viewBox=\'0 0 12 8\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M1 1.5L6 6.5L11 1.5\' stroke=\'white\' stroke-opacity=\'0.5\' stroke-width=\'1.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 1rem center',
+                    paddingRight: '2.5rem',
+                    appearance: 'none'
+                  }}
                 >
                   <option value="">Skip this column</option>
                   {dataType === "products" && (
