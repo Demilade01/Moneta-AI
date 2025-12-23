@@ -10,8 +10,19 @@ import superjson from "superjson";
 // Initialize tRPC with context
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
-  errorFormatter({ shape }) {
-    return shape;
+  errorFormatter({ shape, error }) {
+    // Include custom error data in the error shape
+    const customData = error.cause && typeof error.cause === 'object'
+      ? error.cause
+      : {};
+
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        ...customData,
+      },
+    };
   },
 });
 

@@ -85,10 +85,13 @@ export const authRouter = router({
       });
 
       if (!user) {
-        throw new TRPCError({
+        const error = new TRPCError({
           code: "UNAUTHORIZED",
           message: "Invalid email or password",
         });
+        // Add custom data to identify the error type
+        (error as any).cause = { field: "email", type: "EMAIL_NOT_FOUND" };
+        throw error;
       }
 
       // Verify password
@@ -98,10 +101,13 @@ export const authRouter = router({
       );
 
       if (!isValidPassword) {
-        throw new TRPCError({
+        const error = new TRPCError({
           code: "UNAUTHORIZED",
           message: "Invalid email or password",
         });
+        // Add custom data to identify the error type
+        (error as any).cause = { field: "password", type: "INVALID_PASSWORD" };
+        throw error;
       }
 
       // Generate JWT token
