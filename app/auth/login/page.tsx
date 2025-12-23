@@ -1,22 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useLogin } from "@/lib/client/auth";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const login = useLogin();
 
+  // Clear errors when user starts typing
+  useEffect(() => {
+    if (email) {
+      setEmailError(null);
+    }
+  }, [email]);
+
+  useEffect(() => {
+    if (password) {
+      setPasswordError(null);
+    }
+  }, [password]);
+
+  // Handle login errors
+  useEffect(() => {
+    if (login.error) {
+      const error = login.error as any;
+      // Access custom error data from errorFormatter
+      const errorField = error?.data?.field;
+
+      if (errorField === "email") {
+        setEmailError("No account found with this email address");
+        setPasswordError(null);
+      } else if (errorField === "password") {
+        setPasswordError("Incorrect password");
+        setEmailError(null);
+      } else {
+        // For UNAUTHORIZED errors without field info, show generic message
+        if (error?.data?.code === "UNAUTHORIZED") {
+          setEmailError("Invalid email or password");
+          setPasswordError("Invalid email or password");
+        } else {
+          setEmailError(error?.message || "An error occurred");
+          setPasswordError(null);
+        }
+      }
+    } else {
+      // Clear errors when mutation succeeds or is reset
+      setEmailError(null);
+      setPasswordError(null);
+    }
+  }, [login.error]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Clear previous errors
+    setEmailError(null);
+    setPasswordError(null);
+
+    // Basic validation
+    if (!email) {
+      setEmailError("Email is required");
+      return;
+    }
+    if (!password) {
+      setPasswordError("Password is required");
+      return;
+    }
 
     login.mutate({
       email,
@@ -107,15 +167,41 @@ export default function LoginPage() {
                 <Label htmlFor="email" className="text-sm text-gray-300">
                   Email
                 </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10"
-                />
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    aria-invalid={!!emailError}
+                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 ${
+                      emailError
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20"
+                        : ""
+                    }`}
+                  />
+                  {emailError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                    </motion.div>
+                  )}
+                </div>
+                {emailError && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-1.5 text-sm text-red-400"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    {emailError}
+                  </motion.p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -131,15 +217,41 @@ export default function LoginPage() {
                     Forgot password?
                   </a>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    aria-invalid={!!passwordError}
+                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 ${
+                      passwordError
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20"
+                        : ""
+                    }`}
+                  />
+                  {passwordError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                    </motion.div>
+                  )}
+                </div>
+                {passwordError && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-1.5 text-sm text-red-400"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    {passwordError}
+                  </motion.p>
+                )}
               </div>
 
               {/* Submit Button */}

@@ -53,9 +53,8 @@ export function useLogin() {
       // Refresh the page to update middleware
       router.refresh();
     },
-    onError: (error) => {
-      toast.error(error.message || "Login failed");
-    },
+    // Error handling is done in the component for better UX
+    // onError is removed to allow components to handle errors themselves
   });
 }
 
