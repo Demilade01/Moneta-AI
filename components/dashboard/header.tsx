@@ -83,8 +83,16 @@ export function Header({ onMenuClick }: HeaderProps) {
               variant="ghost"
               className="flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 hover:bg-white/10 md:h-10 md:gap-3 md:px-3"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 md:h-8 md:w-8">
-                <User className="h-3 w-3 text-white md:h-4 md:w-4" />
+              <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg bg-white/10 md:h-8 md:w-8">
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name || "User"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-3 w-3 text-white md:h-4 md:w-4" />
+                )}
               </div>
               <div className="hidden text-left md:block">
                 <div className="text-sm font-medium text-white">{user?.name || "User"}</div>
