@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Sparkles, AlertCircle } from "lucide-react";
+import { ArrowRight, Sparkles, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useLogin } from "@/lib/client/auth";
 import { toast } from "sonner";
@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorField, setErrorField] = useState<"email" | "password" | null>(null);
 
   const login = useLogin();
 
@@ -41,10 +43,13 @@ export default function LoginPage() {
       if (errorField === "email") {
         setEmailError("No account found with this email address");
         setPasswordError(null);
+        setErrorField("email");
       } else if (errorField === "password") {
         setPasswordError("Incorrect password");
         setEmailError(null);
+        setErrorField("password");
       } else {
+        setErrorField(null);
         // For UNAUTHORIZED errors without field info, show generic message
         if (error?.data?.code === "UNAUTHORIZED") {
           setEmailError("Invalid email or password");
@@ -58,6 +63,7 @@ export default function LoginPage() {
       // Clear errors when mutation succeeds or is reset
       setEmailError(null);
       setPasswordError(null);
+      setErrorField(null);
     }
   }, [login.error]);
 
@@ -67,6 +73,7 @@ export default function LoginPage() {
     // Clear previous errors
     setEmailError(null);
     setPasswordError(null);
+    setErrorField(null);
 
     // Basic validation
     if (!email) {
@@ -161,6 +168,7 @@ export default function LoginPage() {
               transition={{ duration: 0.6, delay: 0.4 }}
               onSubmit={handleLogin}
               className="space-y-6"
+              noValidate
             >
               {/* Email Field */}
               <div className="space-y-2">
@@ -171,12 +179,15 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={login.isPending}
                     aria-invalid={!!emailError}
-                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 ${
+                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed ${
                       emailError
                         ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20"
                         : ""
@@ -193,14 +204,32 @@ export default function LoginPage() {
                   )}
                 </div>
                 {emailError && (
-                  <motion.p
+                  <motion.div
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-1.5 text-sm text-red-400"
+                    className="space-y-1.5"
                   >
-                    <AlertCircle className="h-4 w-4" />
-                    {emailError}
-                  </motion.p>
+                    <p className="flex items-center gap-1.5 text-sm text-red-400">
+                      <AlertCircle className="h-4 w-4" />
+                      {emailError}
+                    </p>
+                    {errorField === "email" && (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-sm text-gray-400"
+                      >
+                        Don't have an account?{" "}
+                        <Link
+                          href="/auth/signup"
+                          className="font-medium text-white hover:text-gray-300 transition-colors underline"
+                        >
+                          Sign up here
+                        </Link>
+                      </motion.p>
+                    )}
+                  </motion.div>
                 )}
               </div>
 
@@ -212,7 +241,9 @@ export default function LoginPage() {
                   </Label>
                   <a
                     href="#"
-                    className="text-sm text-gray-400 transition-colors hover:text-white"
+                    className={`text-sm text-gray-400 transition-colors hover:text-white ${
+                      login.isPending ? "pointer-events-none opacity-50" : ""
+                    }`}
                   >
                     Forgot password?
                   </a>
@@ -220,48 +251,87 @@ export default function LoginPage() {
                 <div className="relative">
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    autoComplete="current-password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={login.isPending}
                     aria-invalid={!!passwordError}
-                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 ${
+                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed pr-12 ${
                       passwordError
                         ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20"
                         : ""
                     }`}
                   />
-                  {passwordError && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                    >
-                      <AlertCircle className="h-5 w-5 text-red-500" />
-                    </motion.div>
-                  )}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    {passwordError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <AlertCircle className="h-5 w-5 text-red-500" />
+                      </motion.div>
+                    )}
+                    {password && (
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white/20 rounded p-1"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        disabled={login.isPending}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {passwordError && (
-                  <motion.p
+                  <motion.div
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-1.5 text-sm text-red-400"
+                    className="space-y-1.5"
                   >
-                    <AlertCircle className="h-4 w-4" />
-                    {passwordError}
-                  </motion.p>
+                    <p className="flex items-center gap-1.5 text-sm text-red-400">
+                      <AlertCircle className="h-4 w-4" />
+                      {passwordError}
+                    </p>
+                    {errorField === "password" && (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-sm text-gray-400"
+                      >
+                        <a
+                          href="#"
+                          className="font-medium text-white hover:text-gray-300 transition-colors underline"
+                        >
+                          Forgot your password?
+                        </a>
+                      </motion.p>
+                    )}
+                  </motion.div>
                 )}
               </div>
 
               {/* Submit Button */}
               <Button
                 type="submit"
-                  disabled={login.isPending}
-                className="group h-12 w-full rounded-xl bg-white text-base font-medium text-black transition-all hover:bg-white/90"
+                disabled={login.isPending}
+                className="group h-12 w-full rounded-xl bg-white text-base font-medium text-black transition-all hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {login.isPending ? (
-                  "Signing in..."
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
                 ) : (
                   <>
                     Sign In
@@ -287,7 +357,8 @@ export default function LoginPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10"
+                  disabled={login.isPending}
+                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                     <path
@@ -312,7 +383,8 @@ export default function LoginPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10"
+                  disabled={login.isPending}
+                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />

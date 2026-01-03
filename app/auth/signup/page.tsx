@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSignup } from "@/lib/client/auth";
 
@@ -13,11 +13,99 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullNameError, setFullNameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorField, setErrorField] = useState<"name" | "email" | "password" | null>(null);
 
   const signup = useSignup();
 
+  // Clear errors when user starts typing
+  useEffect(() => {
+    if (fullName) {
+      setFullNameError(null);
+    }
+  }, [fullName]);
+
+  useEffect(() => {
+    if (email) {
+      setEmailError(null);
+    }
+  }, [email]);
+
+  useEffect(() => {
+    if (password) {
+      setPasswordError(null);
+    }
+  }, [password]);
+
+  // Handle signup errors
+  useEffect(() => {
+    if (signup.error) {
+      const error = signup.error as any;
+      // Access custom error data from errorFormatter
+      const errorFieldValue = error?.data?.field;
+      const errorCode = error?.data?.code;
+
+      if (errorFieldValue === "name") {
+        setFullNameError(error?.message || "Name is required");
+        setEmailError(null);
+        setPasswordError(null);
+        setErrorField("name");
+      } else if (errorFieldValue === "email" || errorCode === "CONFLICT") {
+        // Email already exists
+        setEmailError(error?.message || "A user with this email already exists");
+        setFullNameError(null);
+        setPasswordError(null);
+        setErrorField("email");
+      } else if (errorFieldValue === "password") {
+        setPasswordError(error?.message || "Password must be at least 8 characters");
+        setFullNameError(null);
+        setEmailError(null);
+        setErrorField("password");
+      } else {
+        // Generic error
+        setEmailError(error?.message || "An error occurred");
+        setFullNameError(null);
+        setPasswordError(null);
+        setErrorField(null);
+      }
+    } else {
+      // Clear errors when mutation succeeds or is reset
+      setFullNameError(null);
+      setEmailError(null);
+      setPasswordError(null);
+      setErrorField(null);
+    }
+  }, [signup.error]);
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Clear previous errors
+    setFullNameError(null);
+    setEmailError(null);
+    setPasswordError(null);
+    setErrorField(null);
+
+    // Basic validation
+    if (!fullName.trim()) {
+      setFullNameError("Name is required");
+      return;
+    }
+    if (!email) {
+      setEmailError("Email is required");
+      return;
+    }
+    if (!password) {
+      setPasswordError("Password is required");
+      return;
+    }
+    if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
 
     signup.mutate({
       name: fullName,
@@ -103,21 +191,51 @@ export default function SignUpPage() {
               transition={{ duration: 0.6, delay: 0.4 }}
               onSubmit={handleSignUp}
               className="space-y-6"
+              noValidate
             >
               {/* Full Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm text-gray-300">
                   Full Name
                 </Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10"
-                />
+                <div className="relative">
+                  <Input
+                    id="fullName"
+                    type="text"
+                    name="name"
+                    autoComplete="name"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    disabled={signup.isPending}
+                    aria-invalid={!!fullNameError}
+                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      fullNameError
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20"
+                        : ""
+                    }`}
+                  />
+                  {fullNameError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                    </motion.div>
+                  )}
+                </div>
+                {fullNameError && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-1.5 text-sm text-red-400"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    {fullNameError}
+                  </motion.p>
+                )}
               </div>
 
               {/* Email Field */}
@@ -125,15 +243,62 @@ export default function SignUpPage() {
                 <Label htmlFor="email" className="text-sm text-gray-300">
                   Email
                 </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10"
-                />
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={signup.isPending}
+                    aria-invalid={!!emailError}
+                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      emailError
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20"
+                        : ""
+                    }`}
+                  />
+                  {emailError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                    </motion.div>
+                  )}
+                </div>
+                {emailError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-1.5"
+                  >
+                    <p className="flex items-center gap-1.5 text-sm text-red-400">
+                      <AlertCircle className="h-4 w-4" />
+                      {emailError}
+                    </p>
+                    {errorField === "email" && (
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-sm text-gray-400"
+                      >
+                        Already have an account?{" "}
+                        <Link
+                          href="/auth/login"
+                          className="font-medium text-white hover:text-gray-300 transition-colors underline"
+                        >
+                          Sign in here
+                        </Link>
+                      </motion.p>
+                    )}
+                  </motion.div>
+                )}
               </div>
 
               {/* Password Field */}
@@ -141,28 +306,77 @@ export default function SignUpPage() {
                 <Label htmlFor="password" className="text-sm text-gray-300">
                   Password
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10"
-                />
-                <p className="text-xs text-gray-500">
-                  Must be at least 8 characters
-                </p>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={signup.isPending}
+                    aria-invalid={!!passwordError}
+                    className={`h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:border-white/20 focus:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed pr-12 ${
+                      passwordError
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/20"
+                        : ""
+                    }`}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    {passwordError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <AlertCircle className="h-5 w-5 text-red-500" />
+                      </motion.div>
+                    )}
+                    {password && (
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white/20 rounded p-1"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        disabled={signup.isPending}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {passwordError ? (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-1.5 text-sm text-red-400"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    {passwordError}
+                  </motion.p>
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    Must be at least 8 characters
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}
               <Button
                 type="submit"
                 disabled={signup.isPending}
-                className="group h-12 w-full rounded-xl bg-white text-base font-medium text-black transition-all hover:bg-white/90"
+                className="group h-12 w-full rounded-xl bg-white text-base font-medium text-black transition-all hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {signup.isPending ? (
-                  "Creating account..."
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
                 ) : (
                   <>
                     Create Account
@@ -172,7 +386,9 @@ export default function SignUpPage() {
               </Button>
 
               {/* Terms */}
-              <p className="text-center text-xs text-gray-500">
+              <p className={`text-center text-xs text-gray-500 ${
+                signup.isPending ? "opacity-50 pointer-events-none" : ""
+              }`}>
                 By signing up, you agree to our{" "}
                 <a href="#" className="text-gray-400 hover:text-white">
                   Terms of Service

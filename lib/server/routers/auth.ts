@@ -31,10 +31,13 @@ export const authRouter = router({
       });
 
       if (existingUser) {
-        throw new TRPCError({
+        const error = new TRPCError({
           code: "CONFLICT",
           message: "A user with this email already exists",
         });
+        // Add custom data to identify the error type
+        (error as any).cause = { field: "email", type: "EMAIL_EXISTS" };
+        throw error;
       }
 
       // Hash password
