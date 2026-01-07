@@ -22,6 +22,8 @@ Moneta AI is an intelligent pricing analyst designed to help businesses make con
 - 📤 **Data Upload System** - Drag-and-drop CSV/Excel files with automatic column mapping and validation
 - 🔍 **Explainable AI** - Full transparency with detailed reasoning for every recommendation
 - 🛡️ **Full Auditability** - Every decision logged and traceable
+- 👤 **User Profile Management** - Avatar upload, profile settings, and password management
+- 🔐 **Secure Authentication** - JWT-based auth with HTTP-only cookies and protected routes
 
 ## 🛠️ Tech Stack
 
@@ -35,6 +37,8 @@ Moneta AI is an intelligent pricing analyst designed to help businesses make con
 - **State Management**: TanStack Query
 - **Forms**: React Hook Form + Zod validation
 - **Date Handling**: date-fns
+- **File Parsing**: PapaParse (CSV) + xlsx (Excel)
+- **Notifications**: Sonner (toast notifications)
 - **Deployment**: Vercel
 
 ## Getting Started
@@ -59,8 +63,10 @@ cp .env.example .env
 # OPENAI_API_KEY=your-openai-api-key
 
 # Initialize database
-npm run db:generate
-npm run db:push
+npm run db:generate    # Generate Prisma client
+npm run db:push        # Push schema to database (dev)
+# OR
+npm run db:migrate     # Create migration (production)
 
 # Run development server
 npm run dev
@@ -87,20 +93,66 @@ See [AI_SETUP.md](./AI_SETUP.md) for detailed information about:
 - Cost estimation
 - Troubleshooting
 
+## 🗄️ Database Schema
+
+The application uses PostgreSQL with Prisma ORM. The schema includes 11 models:
+
+### Core Models
+- **User** - User accounts with authentication, roles, and profile (including avatar)
+- **Product** - Product catalog with SKU, pricing, and categorization
+- **PriceHistory** - Historical price changes tracking
+- **SalesData** - Sales performance metrics by time period
+- **CompetitorData** - Competitor pricing and market signals
+
+### AI & Analytics Models
+- **Recommendation** - AI-generated pricing recommendations with reasoning, confidence scores, and impact projections
+- **Simulation** - Price simulation scenarios (what-if analysis)
+- **SimulationItem** - Products included in a simulation
+- **SimulationResult** - Projected outcomes from simulations
+- **PricingInsight** - Automated insights and alerts
+
+### Data Management
+- **DataUpload** - File upload tracking and processing status
+
+All models include proper indexing, relationships, and cascade deletion rules. See `prisma/schema.prisma` for full details.
+
 ## 📁 Project Structure
 
 ```
 moneta-ai/
-├── app/                    # Next.js App Router
-│   ├── auth/              # Authentication pages
-│   │   ├── login/        # Login page
-│   │   └── signup/       # Sign up page
-│   ├── dashboard/         # Dashboard (coming soon)
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Landing page
-│   └── globals.css        # Global styles
+├── app/                           # Next.js App Router
+│   ├── actions/                   # Server actions
+│   │   └── auth.ts               # Authentication actions
+│   ├── api/                       # API routes
+│   │   └── trpc/                 # tRPC API endpoint
+│   │       └── [trpc]/
+│   │           └── route.ts
+│   ├── auth/                      # Authentication pages
+│   │   ├── login/                # Login page
+│   │   └── signup/               # Sign up page
+│   ├── dashboard/                 # Dashboard pages
+│   │   ├── analytics/           # Analytics page
+│   │   ├── data/                 # Data upload page
+│   │   ├── pricing/              # Pricing analysis page
+│   │   ├── recommendations/      # AI recommendations page
+│   │   ├── settings/             # User settings page
+│   │   ├── simulations/          # Price simulations page
+│   │   ├── layout.tsx            # Dashboard layout
+│   │   └── page.tsx              # Dashboard overview
+│   ├── layout.tsx                # Root layout
+│   ├── page.tsx                  # Landing page
+│   └── globals.css                # Global styles
 ├── components/
-│   ├── sections/          # Landing page sections
+│   ├── charts/                    # Chart components
+│   │   ├── category-breakdown-chart.tsx
+│   │   ├── competitor-comparison-chart.tsx
+│   │   └── revenue-trend-chart.tsx
+│   ├── dashboard/                 # Dashboard components
+│   │   ├── header.tsx            # Dashboard header
+│   │   └── sidebar.tsx           # Dashboard sidebar
+│   ├── providers/                 # React providers
+│   │   └── trpc-provider.tsx     # tRPC provider
+│   ├── sections/                  # Landing page sections
 │   │   ├── navbar.tsx
 │   │   ├── hero.tsx
 │   │   ├── features.tsx
@@ -110,10 +162,46 @@ moneta-ai/
 │   │   ├── cta.tsx
 │   │   ├── footer.tsx
 │   │   └── animated-background.tsx
-│   └── ui/                # shadcn UI components
-├── lib/                   # Utilities and helpers
-├── public/                # Static assets
-└── prisma/                # Database schema (coming soon)
+│   └── ui/                        # shadcn UI components
+├── lib/
+│   ├── client/                    # Client-side utilities
+│   │   ├── auth.tsx              # Auth hooks and utilities
+│   │   ├── trpc.ts               # tRPC client setup
+│   │   └── trpc-usage-example.tsx
+│   ├── generated/                 # Generated code
+│   │   └── prisma/               # Generated Prisma client
+│   ├── server/                    # Server-side code
+│   │   ├── ai/                   # AI agent system
+│   │   │   ├── openai-client.ts
+│   │   │   ├── pricing-agent.ts  # Multi-agent pricing system
+│   │   │   └── prompts.ts        # AI prompts
+│   │   ├── routers/              # tRPC routers
+│   │   │   ├── _app.ts          # Main app router
+│   │   │   ├── analytics.ts     # Analytics router
+│   │   │   ├── auth.ts          # Authentication router
+│   │   │   ├── products.ts      # Products router
+│   │   │   ├── recommendations.ts # Recommendations router
+│   │   │   ├── simulations.ts   # Simulations router
+│   │   │   └── upload.ts        # File upload router
+│   │   ├── utils/                # Server utilities
+│   │   │   ├── analytics.ts     # Analytics calculations
+│   │   │   ├── data-validator.ts # Data validation
+│   │   │   └── file-parser.ts   # CSV/Excel parsing
+│   │   ├── auth.ts               # Auth utilities
+│   │   ├── context.ts            # tRPC context
+│   │   └── trpc.ts               # tRPC setup
+│   ├── prisma.ts                  # Prisma client instance
+│   └── utils.ts                   # Shared utilities
+├── prisma/
+│   └── schema.prisma              # Database schema
+├── public/                        # Static assets
+├── sample-data/                   # Sample CSV files for testing
+│   ├── competitor-data.csv
+│   ├── products.csv
+│   └── sales-data.csv
+├── middleware.ts                  # Next.js middleware
+├── components.json                # shadcn/ui config
+└── package.json                   # Dependencies
 ```
 
 ## 🎨 Design System
@@ -140,6 +228,12 @@ npm start
 
 # Lint code
 npm run lint
+
+# Database commands
+npm run db:generate    # Generate Prisma client
+npm run db:push        # Push schema changes (dev)
+npm run db:migrate     # Create migration (production)
+npm run db:studio      # Open Prisma Studio (database GUI)
 ```
 
 
@@ -184,7 +278,16 @@ npm run lint
 - [x] AI recommendations page with actions
 - [x] Recommendation tracking & implementation
 
-### 📋 Phase 6: Advanced Features (Next)
+### ✅ Phase 6: User Experience Enhancements (Complete)
+- [x] Enhanced error handling with field-specific messages
+- [x] Password visibility toggles
+- [x] Email autocomplete hints
+- [x] Improved loading states
+- [x] User avatar upload functionality
+- [x] Profile settings with real-time updates
+- [x] Password change functionality
+
+### 📋 Phase 7: Advanced Features (Next)
 - [ ] Batch recommendation generation
 - [ ] Streaming AI responses for real-time feedback
 - [ ] Custom business rules & constraints
